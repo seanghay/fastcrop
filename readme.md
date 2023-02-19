@@ -22,13 +22,13 @@ npx fastcrop@latest photo.jpg -s 512x512 --output ./my-dir/
     $ fastcrop <input>
 
   Options
+    --dry-run, -d Dry run.
     --size, -s Specify output size.
     --output, -o  Output directory.
     --concurrency, -c Number of concurrency. (default: Infinity)
 
   Examples
     $ fastcrop photo.jpg -s 512x512 --output ./my-dir/
-
 ```
 
 ## API
