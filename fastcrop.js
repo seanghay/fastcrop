@@ -14,12 +14,14 @@ import PQueue from "p-queue";
  * @param {number} height 
  * @returns {Promise<void>}
  */
-export async function crop(src, dest, width, height) {
+export async function crop(src, dest, width, height, dryRun = false) {
   const { topCrop: crop } = await smartcrop.crop(src, { width, height });
-  return sharp(src)
+  const impl = sharp(src)
     .extract({ width: crop.width, height: crop.height, left: crop.x, top: crop.y })
-    .resize(width, height)
-    .toFile(dest);
+    .resize(width, height);
+
+  if (dryRun) return impl.toBuffer();
+  return impl.toFile(dest);
 }
 
 /**
@@ -37,10 +39,15 @@ export async function cropMultiple(
   width,
   height,
   concurrency = Infinity,
+  dryRun = false,
 ) {
 
   destDir = path.resolve(destDir);
-  await fs.mkdir(destDir, { recursive: true });
+  
+  if (!dryRun) {
+    await fs.mkdir(destDir, { recursive: true });
+  }
+  
   const piscina = new Piscina({ filename: new URL("./fastcrop.worker.js", import.meta.url).href });
   const queue = new PQueue({ concurrency })
 
@@ -48,7 +55,7 @@ export async function cropMultiple(
     for (const src of srcDir) {
       const dest = path.join(destDir, path.basename(src));
       queue.add(async () => {
-        await piscina.run({ src, dest, width, height });
+        await piscina.run({ src, dest, width, height, dryRun });
       })
     }
 
@@ -61,7 +68,7 @@ export async function cropMultiple(
   for await (const src of globbyStream(srcDir, { gitignore: false })) {
     const dest = path.join(destDir, path.basename(src));
     queue.add(async () => {
-      await piscina.run({ src, dest, width, height });
+      await piscina.run({ src, dest, width, height, dryRun });
     })
   }
 

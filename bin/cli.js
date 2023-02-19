@@ -10,6 +10,7 @@ Usage
   $ fastcrop <input>
 
 Options
+  --dry-run, -d Dry run.
   --size, -s Specify output size.
   --output, -o  Output directory.
   --concurrency, -c Number of concurrency. (default: Infinity)
@@ -20,6 +21,10 @@ Examples
   `, {
   importMeta: import.meta,
   flags: {
+    dryRun: {
+      type: 'boolean',
+      default: false,
+    },
     concurrency: {
       type: 'number',
       default: Infinity,
@@ -73,12 +78,13 @@ if (cli.input.length === 1) {
       size[0],
       size[1],
       cli.flags.concurrency,
+      cli.flags.dryRun,
     )
   } else {
     // single file
     const src = cli.input[0];
     console.log(`[fastcrop] cropping ${JSON.stringify(src)}`);
-    await crop(cli.input[0], cli.flags.output, size[0], size[1]);
+    await crop(cli.input[0], cli.flags.output, size[0], size[1], cli.flags.dryRun);
     console.log(`[fastcrop] saved ${JSON.stringify(src)}`);
   }
 
@@ -97,5 +103,5 @@ await cropMultiple(
   size[0],
   size[1],
   cli.flags.concurrency,
-
+  cli.flags.dryRun
 )
