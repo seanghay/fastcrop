@@ -6,6 +6,14 @@ import path from 'node:path'
 import { Piscina } from "piscina";
 import PQueue from "p-queue";
 
+/**
+ * Crop a single file
+ * @param {string} src 
+ * @param {string} dest 
+ * @param {number} width 
+ * @param {number} height 
+ * @returns {Promise<void>}
+ */
 export async function crop(src, dest, width, height) {
   const { topCrop: crop } = await smartcrop.crop(src, { width, height });
   return sharp(src)
@@ -14,6 +22,15 @@ export async function crop(src, dest, width, height) {
     .toFile(dest);
 }
 
+/**
+ * Crop multiple files using stream and worker threads.
+ * @param {string|string[]} srcDir 
+ * @param {string} destDir 
+ * @param {number} width 
+ * @param {number} height 
+ * @param {number} concurrency 
+ * @returns {Promise<void>}
+ */
 export async function cropMultiple(
   srcDir,
   destDir,
