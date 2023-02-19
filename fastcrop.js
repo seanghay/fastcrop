@@ -40,7 +40,6 @@ export async function cropMultiple(
 ) {
 
   destDir = path.resolve(destDir);
-
   await fs.mkdir(destDir, { recursive: true });
   const piscina = new Piscina({ filename: new URL("./fastcrop.worker.js", import.meta.url).href });
   const queue = new PQueue({ concurrency })
@@ -48,11 +47,16 @@ export async function cropMultiple(
   if (Array.isArray(srcDir)) {
     for (const src of srcDir) {
       const dest = path.join(destDir, path.basename(src));
-      piscina.run({ src, dest, width, height });
+      queue.add(async () => {
+        await piscina.run({ src, dest, width, height });
+      })
     }
+
+    // clean up
+    await queue.onIdle();
+    await piscina.destroy();
     return;
   }
-
 
   for await (const src of globbyStream(srcDir, { gitignore: false })) {
     const dest = path.join(destDir, path.basename(src));
@@ -61,6 +65,7 @@ export async function cropMultiple(
     })
   }
 
+  // clean up
   await queue.onIdle();
   await piscina.destroy();
 }
